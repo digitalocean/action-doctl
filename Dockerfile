@@ -9,7 +9,7 @@ LABEL "com.github.actions.description"="Wraps doctl to enable common DigitalOcea
 LABEL "com.github.actions.icon"="droplet"
 LABEL "com.github.actions.color"="blue"
 
-ENV DOCTL_VERSION=1.11.0
+ENV DOCTL_VERSION=1.12.2
 
 RUN apk add --no-cache curl
 
