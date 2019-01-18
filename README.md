@@ -19,7 +19,7 @@ action "Save DigitalOcean kubeconfig" {
 }
 ```
 
-By default, this action is configured to save output in JSON format to `${HOME}/${GITHUB_ACTION}.${DIGITALOCEAN_OUTPUT_FORMAT}`for consumption by downstream actions.
+See [this reposirory](https://github.com/andrewsomething/example-doctl-action) for a full end-to-end example that also demonstrates building the Docker image, pushing it to Docker Hub, and using `kubectl` to deploy to the Kubernetes cluster on DigitalOcean.
 
 ### Secrets
 
@@ -30,6 +30,8 @@ By default, this action is configured to save output in JSON format to `${HOME}/
 We provide defaults for the following, these may also be overridden:
 
 - `DIGITALOCEAN_OUTPUT_FORMAT`- **Optional** doctl's output output format, defaults to `json`
+
+By default, this action is configured to save output in JSON format to `${HOME}/${GITHUB_ACTION}.${DIGITALOCEAN_OUTPUT_FORMAT}`for consumption by downstream actions.
 
 ## License
 
