@@ -1,8 +1,8 @@
 FROM alpine:3.5
 
 LABEL "name"="doctl"
-LABEL "version"="0.0.1-dev"
-LABEL "maintainer"="Andrew Starr-Bochicchio <asb@do.co>"
+LABEL "version"="0.0.1"
+LABEL "maintainer"="Andrew Starr-Bochicchio <asb@digitalocean.com>"
 
 LABEL "com.github.actions.name"="GitHub Action for DigitalOcean"
 LABEL "com.github.actions.description"="Wraps doctl to enable common DigitalOcean commands."
