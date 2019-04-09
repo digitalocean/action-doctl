@@ -1,17 +1,17 @@
 FROM alpine:3.5
 
 LABEL "name"="doctl"
-LABEL "version"="0.1.0"
+LABEL "version"="1.0.0"
 LABEL "maintainer"="Andrew Starr-Bochicchio <asb@digitalocean.com>"
-LABEL "repository"="https://github.com/digitalocean/action"
-LABEL "homepage"="https://github.com/digitalocean/action"
+LABEL "repository"="https://github.com/digitalocean/actions"
+LABEL "homepage"="https://github.com/digitalocean/actions"
 
-LABEL "com.github.actions.name"="GitHub Action for DigitalOcean"
-LABEL "com.github.actions.description"="Wraps doctl to enable common DigitalOcean commands."
+LABEL "com.github.actions.name"="GitHub Action for DigitalOcean - doctl"
+LABEL "com.github.actions.description"="Use doctl to manage you DigitalOcean resources."
 LABEL "com.github.actions.icon"="droplet"
 LABEL "com.github.actions.color"="blue"
 
-ENV DOCTL_VERSION=1.13.0
+ENV DOCTL_VERSION=1.15.0
 
 RUN apk add --no-cache curl
 
