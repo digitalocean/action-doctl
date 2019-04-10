@@ -1,7 +1,7 @@
 FROM alpine:3.5
 
 LABEL "name"="doctl"
-LABEL "version"="1.0.0"
+LABEL "version"="1.1.0"
 LABEL "maintainer"="Andrew Starr-Bochicchio <asb@digitalocean.com>"
 LABEL "repository"="https://github.com/digitalocean/actions"
 LABEL "homepage"="https://github.com/digitalocean/actions"
