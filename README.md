@@ -10,7 +10,7 @@ As an example, one common use case is retrieving the credentials for a Kubernete
 ```hcl
 action "Save DigitalOcean kubeconfig" {
   needs = ["Push image to Docker Hub"]
-  uses = "digitalocean/actions/doctl@master"
+  uses = "digitalocean/action-doctl@master"
   secrets = ["DIGITALOCEAN_ACCESS_TOKEN"]
   env = {
     CLUSTER_NAME = "example"

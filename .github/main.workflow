@@ -5,10 +5,10 @@ workflow "Test and Lint" {
 
 action "Lint shell scripts" {
   uses = "actions/bin/shellcheck@master"
-  args = "*/*.sh"
+  args = "*.sh"
 }
 
 action "Test build doctl" {
   uses = "actions/docker/cli@master"
-  args = "build $GITHUB_WORKSPACE/doctl"
+  args = "build $GITHUB_WORKSPACE"
 }
