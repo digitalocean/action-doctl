@@ -19,7 +19,7 @@ action "Save DigitalOcean kubeconfig" {
 }
 ```
 
-See [this reposirory](https://github.com/andrewsomething/example-doctl-action) for a full end-to-end example that also demonstrates building the Docker image, pushing it to Docker Hub, and using `kubectl` to deploy to the Kubernetes cluster on DigitalOcean.
+See [this repository](https://github.com/andrewsomething/example-doctl-action) for a full end-to-end example that also demonstrates building the Docker image, pushing it to Docker Hub, and using `kubectl` to deploy to the Kubernetes cluster on DigitalOcean.
 
 ### Secrets
 
