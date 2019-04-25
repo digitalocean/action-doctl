@@ -3,8 +3,8 @@ FROM alpine:3.5
 LABEL "name"="doctl"
 LABEL "version"="1.1.0"
 LABEL "maintainer"="Andrew Starr-Bochicchio <asb@digitalocean.com>"
-LABEL "repository"="https://github.com/digitalocean/actions"
-LABEL "homepage"="https://github.com/digitalocean/actions"
+LABEL "repository"="https://github.com/digitalocean/action-doctl"
+LABEL "homepage"="https://github.com/digitalocean/action-doctl"
 
 LABEL "com.github.actions.name"="GitHub Action for DigitalOcean - doctl"
 LABEL "com.github.actions.description"="Use doctl to manage you DigitalOcean resources."
