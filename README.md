@@ -15,7 +15,7 @@ action "Save DigitalOcean kubeconfig" {
   env = {
     CLUSTER_NAME = "example"
   }
-  args = ["kubernetes cluster kubeconfig show $CLUSTER_NAME > $HOME/.kubeconfig"]
+  args = ["kubernetes cluster kubeconfig save $CLUSTER_NAME"]
 }
 ```
 
