@@ -11,8 +11,8 @@ LABEL "com.github.actions.description"="Use doctl to manage you DigitalOcean res
 LABEL "com.github.actions.icon"="droplet"
 LABEL "com.github.actions.color"="blue"
 
-ENV DOCTL_VERSION=1.18.0
-ENV DOCTL_SHA256=f556cd224d5da65edbb4f50a927bfbf01892f9488782f5cf146b4d28d6fe0b22
+ENV DOCTL_VERSION=1.22.0
+ENV DOCTL_SHA256=5817d5c397e49e9d4b025e95d5a161b4200631ff68a4a1bbda618a3261d717a2
 
 RUN apk add --no-cache curl
 
