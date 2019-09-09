@@ -7,16 +7,13 @@ This action enables you to interact with [DigitalOcean](https://www.digitalocean
 As an example, one common use case is retrieving the credentials for a Kubernetes cluster hosted on DigitalOcean for use in a deployment workflow:
 
 
-```hcl
-action "Save DigitalOcean kubeconfig" {
-  needs = ["Push image to Docker Hub"]
-  uses = "digitalocean/action-doctl@master"
-  secrets = ["DIGITALOCEAN_ACCESS_TOKEN"]
-  env = {
-    CLUSTER_NAME = "example"
-  }
-  args = ["kubernetes cluster kubeconfig show $CLUSTER_NAME > $HOME/.kubeconfig"]
-}
+```yaml
+    - name: Save DigitalOcean kubeconfig
+      uses: digitalocean/action-doctl@master
+      env:
+        DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      with:
+        args: kubernetes cluster kubeconfig show k8s-cluster-name > $GITHUB_WORKSPACE/.kubeconfig
 ```
 
 See [this repository](https://github.com/andrewsomething/example-doctl-action) for a full end-to-end example that also demonstrates building the Docker image, pushing it to Docker Hub, and using `kubectl` to deploy to the Kubernetes cluster on DigitalOcean.
