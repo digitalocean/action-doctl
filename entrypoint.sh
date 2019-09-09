@@ -12,7 +12,7 @@ fi
 [ -n "$DIGITALOCEAN_OUTPUT_FORMAT" ] || export DIGITALOCEAN_OUTPUT_FORMAT=json
 
 # Capture output
-output=$( sh -c "doctl $* -o ${DIGITALOCEAN_OUTPUT_FORMAT}" )
+output=$( sh -c "./doctl $* -o ${DIGITALOCEAN_OUTPUT_FORMAT}" )
 
 # Preserve output for consumption by downstream actions
 echo "$output" > "${HOME}/${GITHUB_ACTION}.${DIGITALOCEAN_OUTPUT_FORMAT}"
