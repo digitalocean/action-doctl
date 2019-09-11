@@ -7,7 +7,7 @@ LABEL "repository"="https://github.com/digitalocean/action-doctl"
 LABEL "homepage"="https://github.com/digitalocean/action-doctl"
 
 LABEL "com.github.actions.name"="GitHub Action for DigitalOcean - doctl"
-LABEL "com.github.actions.description"="Use doctl to manage you DigitalOcean resources."
+LABEL "com.github.actions.description"="Use doctl to manage your DigitalOcean resources."
 LABEL "com.github.actions.icon"="droplet"
 LABEL "com.github.actions.color"="blue"
 
