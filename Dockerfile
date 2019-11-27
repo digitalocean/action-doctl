@@ -1,4 +1,4 @@
-FROM digitalocean/doctl:1.30.0
+FROM digitalocean/doctl:1.34.0
 
 LABEL "name"="doctl"
 LABEL "version"="1.4.1"
