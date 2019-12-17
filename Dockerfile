@@ -1,7 +1,7 @@
-FROM digitalocean/doctl:1.34.0
+FROM digitalocean/doctl:1.36.0
 
 LABEL "name"="doctl"
-LABEL "version"="1.4.1"
+LABEL "version"="1.6.0"
 LABEL "maintainer"="Andrew Starr-Bochicchio <asb@digitalocean.com>"
 LABEL "repository"="https://github.com/digitalocean/action-doctl"
 LABEL "homepage"="https://github.com/digitalocean/action-doctl"
