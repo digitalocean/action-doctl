@@ -1,14 +1,17 @@
-workflow "Test and Lint" {
-  on = "push"
-  resolves = ["Lint shell scripts", "Test build doctl"]
-}
+on: [push, pull_request]
 
-action "Lint shell scripts" {
-  uses = "actions/bin/shellcheck@master"
-  args = "*.sh"
-}
+jobs:
 
-action "Test build doctl" {
-  uses = "actions/docker/cli@master"
-  args = "build $GITHUB_WORKSPACE"
-}
+  build:
+    name: Lint and test build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout master
+      uses: actions/checkout@master
+
+    - name: Lint shell scripts
+      run: shellcheck *.sh
+
+    - name: Test build doctl container
+      run: docker build $GITHUB_WORKSPACE
