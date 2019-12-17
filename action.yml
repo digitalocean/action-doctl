@@ -1,0 +1,9 @@
+name: 'GitHub Action for DigitalOcean - doctl'
+description: 'Use doctl to manage your DigitalOcean resources.'
+author: 'Andrew Starr-Bochicchio <asb@digitalocean.com>'
+branding:
+  icon: 'droplet'
+  color: 'blue'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
