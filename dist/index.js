@@ -4966,6 +4966,7 @@ const exec = __webpack_require__(986);
 const tc = __webpack_require__(533);
 const { Octokit } = __webpack_require__(889);
 
+const baseDownloadURL = "https://github.com/digitalocean/doctl/releases/download"
 const fallbackVersion = "1.39.0"
 const octokit = new Octokit();
 
@@ -4973,15 +4974,15 @@ async function downloadDoctl(version) {
     var doctlInstall;
 
     if (process.platform === 'win32') {
-        const doctlDownload = await tc.downloadTool(`https://github.com/digitalocean/doctl/releases/download/v${version}/doctl-${version}-windows-amd64.zip`);
+        const doctlDownload = await tc.downloadTool(`${baseDownloadURL}/v${version}/doctl-${version}-windows-amd64.zip`);
         doctlInstall = await tc.extractZip(doctlDownload);
     }
     else if (process.platform === 'darwin') {
-        const doctlDownload = await tc.downloadTool(`https://github.com/digitalocean/doctl/releases/download/v${version}/doctl-${version}-darwin-amd64.tar.gz`);
+        const doctlDownload = await tc.downloadTool(`${baseDownloadURL}/v${version}/doctl-${version}-darwin-amd64.tar.gz`);
         doctlInstall = await tc.extractTar(doctlDownload);
     }
     else {
-        const doctlDownload = await tc.downloadTool(`https://github.com/digitalocean/doctl/releases/download/v${version}/doctl-${version}-linux-amd64.tar.gz`);
+        const doctlDownload = await tc.downloadTool(`${baseDownloadURL}/v${version}/doctl-${version}-linux-amd64.tar.gz`);
         doctlInstall = await tc.extractTar(doctlDownload);
     }
 
@@ -5016,7 +5017,7 @@ Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
         path = await tc.cacheDir(installPath, 'doctl', version);
     }
     core.addPath(path);
-    core.info(`>>> doctl version '${version}' installed to ${path}`);
+    core.info(`>>> doctl version v${version} installed to ${path}`);
 
     var token = process.env.DIGITALOCEAN_ACCESS_TOKEN
     if (!token) {
