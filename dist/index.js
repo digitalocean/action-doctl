@@ -5026,6 +5026,7 @@ Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
 
     if (token) {
         await exec.exec('doctl auth init -t', [token]);
+        core.info('>>> Successfully logged into doctl');
     }
   }
   catch (error) {
