@@ -37,8 +37,9 @@ async function run() {
         }).catch(error => {
             // GitHub rate-limits are by IP address and runners can share IPs.
             // Fallback to a known version if rate limited.
-            core.warning(error.message)
-            core.warning(`Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
+            core.warning(`${error.message}
+
+Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
             return fallbackVersion;
         });
     }
