@@ -23,7 +23,7 @@ async function downloadDoctl(version) {
         doctlInstall = await tc.extractTar(doctlDownload);
     }
 
-    return doctlInstall
+    return doctlInstall;
 }
 
 async function run() {
@@ -71,4 +71,4 @@ Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
   }
 }
 
-run()
+run();
