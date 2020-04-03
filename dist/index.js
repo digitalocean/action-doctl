@@ -5019,15 +5019,9 @@ Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
     core.addPath(path);
     core.info(`>>> doctl version v${version} installed to ${path}`);
 
-    var token = process.env.DIGITALOCEAN_ACCESS_TOKEN
-    if (!token) {
-        token = core.getInput('token');
-    }
-
-    if (token) {
-        await exec.exec('doctl auth init -t', [token]);
-        core.info('>>> Successfully logged into doctl');
-    }
+    var token = core.getInput('token', { required: true });
+    await exec.exec('doctl auth init -t', [token]);
+    core.info('>>> Successfully logged into doctl');
   }
   catch (error) {
     core.setFailed(error.message);
