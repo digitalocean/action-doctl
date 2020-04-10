@@ -4,7 +4,7 @@ const tc = require('@actions/tool-cache');
 const { Octokit } = require("@octokit/rest");
 
 const baseDownloadURL = "https://github.com/digitalocean/doctl/releases/download"
-const fallbackVersion = "1.39.0"
+const fallbackVersion = "1.40.0"
 const octokit = new Octokit();
 
 async function downloadDoctl(version) {
