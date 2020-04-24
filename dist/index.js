@@ -5000,7 +5000,8 @@ async function run() {
             return result.data.name;
         }).catch(error => {
             // GitHub rate-limits are by IP address and runners can share IPs.
-            // Fallback to a known version if rate limited.
+            // This mostly effects macOS where the pool of runners seems limited.
+            // Fallback to a known version if API access is rate limited.
             core.warning(`${error.message}
 
 Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
