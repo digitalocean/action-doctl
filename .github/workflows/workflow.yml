@@ -1,17 +1,81 @@
 on: [push, pull_request]
+name: Test and lint
 
 jobs:
 
-  build:
-    name: Lint and test build
+  lint:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@master
+      - run: npm test
 
-    - name: Checkout master
-      uses: actions/checkout@master
+  package_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: "Ensure that code has been packaged and commited"
+        run: |-
+            npm install
+            npm run package
+            git diff --exit-code dist/index.js || \
+              (echo -e "\nPlease run 'npm run package' and commit the results" && exit 1)
 
-    - name: Lint shell scripts
-      run: shellcheck *.sh
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@master
 
-    - name: Test build doctl container
-      run: docker build $GITHUB_WORKSPACE
+      - name: Install doctl
+        uses: ./
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Verify installation
+        run: doctl version
+
+      - name: Verify log-in
+        run: doctl compute region list
+
+  test_custom_version_linux_and_mac:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Install doctl
+        uses: ./
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          version: 1.38.0
+
+      - name: Verify installation of correct version
+        run: |
+          VERSION=$(doctl version | head -1 | cut -f3 -d' ' | cut -f1 -d'-')
+          if [ "$VERSION" != "1.38.0" ]; then exit 1; fi
+
+      - name: Verify log-in
+        run: doctl compute region list
+
+  test_custom_version_windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Install doctl
+        uses: ./
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          version: 1.38.0
+
+      - name: Verify installation of correct version
+        run: |
+          $VERSION = (doctl version | head -1 | cut -f3 -d' ' | cut -f1 -d'-')
+          If (-NOT  ($VERSION -eq "1.38.0")) { exit 1 }
+
+      - name: Verify log-in
+        run: doctl compute region list

@@ -1,0 +1,39 @@
+{
+  "name": "action-doctl",
+  "version": "2.0.0",
+  "description": "GitHub Action for DigitalOcean - doctl",
+  "main": "main.js",
+  "dependencies": {
+    "@actions/core": "^1.2.3",
+    "@actions/exec": "^1.0.3",
+    "@actions/tool-cache": "^1.3.3",
+    "@octokit/rest": "^17.1.4"
+  },
+  "devDependencies": {
+    "@zeit/ncc": "^0.22.0",
+    "eslint": "^6.8.0"
+  },
+  "scripts": {
+    "lint": "eslint main.js",
+    "test": "npm install; npm run lint",
+    "package": "ncc build main.js -o dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/digitalocean/action-doctl.git"
+  },
+  "keywords": [
+    "GitHub",
+    "Actions",
+    "DigitalOcean",
+    "CI/CD",
+    "deployment",
+    "cloud"
+  ],
+  "author": "Andrew Starr-Bochicchio <asb@digitalocean.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/digitalocean/action-doctl/issues"
+  },
+  "homepage": "https://github.com/digitalocean/action-doctl#readme"
+}
