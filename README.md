@@ -1,3 +1,5 @@
+**Note:** v2 is now the default branch for this repository. This branch remains to maintain backwards compatiblity.
+
 # GitHub Actions for DigitalOcean
 
 This action enables you to interact with [DigitalOcean](https://www.digitalocean.com/) services via [the `doctl` command-line client](https://github.com/digitalocean/doctl).
