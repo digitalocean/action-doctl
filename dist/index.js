@@ -4967,7 +4967,7 @@ const tc = __webpack_require__(533);
 const { Octokit } = __webpack_require__(889);
 
 const baseDownloadURL = "https://github.com/digitalocean/doctl/releases/download"
-const fallbackVersion = "1.40.0"
+const fallbackVersion = "1.42.0"
 const octokit = new Octokit();
 
 async function downloadDoctl(version) {
@@ -5029,6 +5029,7 @@ Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
 }
 
 run();
+
 
 /***/ }),
 
