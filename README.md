@@ -20,7 +20,7 @@ To install the latest version of `doctl` and use it in GitHub Actions workflows,
       run: doctl kubernetes cluster kubeconfig save testing-cluster
 ```
 
-See [this repository](https://github.com/do-community/example-doctl-action) for a full end-to-end example that also demonstrates building a Docker image, pushing it to Docker Hub, and using `kubectl` to deploy it to the Kubernetes cluster on DigitalOcean.
+See [this repository](https://github.com/do-community/example-doctl-action) for a full end-to-end example that also demonstrates building a Docker image, pushing it to a private DigitalOcean container registry, and using `kubectl` to deploy it to the Kubernetes cluster on DigitalOcean.
 
 ### Arguments
 
