@@ -5311,22 +5311,16 @@ const fallbackVersion = "1.42.0"
 const octokit = new Octokit();
 
 async function downloadDoctl(version) {
-    var doctlInstall;
-
     if (process.platform === 'win32') {
         const doctlDownload = await tc.downloadTool(`${baseDownloadURL}/v${version}/doctl-${version}-windows-amd64.zip`);
-        doctlInstall = await tc.extractZip(doctlDownload);
+        return tc.extractZip(doctlDownload);
     }
-    else if (process.platform === 'darwin') {
+    if (process.platform === 'darwin') {
         const doctlDownload = await tc.downloadTool(`${baseDownloadURL}/v${version}/doctl-${version}-darwin-amd64.tar.gz`);
-        doctlInstall = await tc.extractTar(doctlDownload);
+        return tc.extractTar(doctlDownload);
     }
-    else {
-        const doctlDownload = await tc.downloadTool(`${baseDownloadURL}/v${version}/doctl-${version}-linux-amd64.tar.gz`);
-        doctlInstall = await tc.extractTar(doctlDownload);
-    }
-
-    return doctlInstall;
+    const doctlDownload = await tc.downloadTool(`${baseDownloadURL}/v${version}/doctl-${version}-linux-amd64.tar.gz`);
+    return tc.extractTar(doctlDownload);
 }
 
 async function run() {
