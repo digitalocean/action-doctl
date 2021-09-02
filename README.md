@@ -24,7 +24,7 @@ See [this repository](https://github.com/do-community/example-doctl-action) for 
 
 ### Arguments
 
-- `token` – (**Required**) A DigitalOcean personal access token ([more info](https://www.digitalocean.com/docs/api/create-personal-access-token/)).
+- `token` – (**Required**) A DigitalOcean personal access token ([more info](https://docs.digitalocean.com/reference/api/create-personal-access-token/)).
 - `version` – (Optional) The version of `doctl` to install. If excluded, the latest release will be used.
 
 ## Contributing
