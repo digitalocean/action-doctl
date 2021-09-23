@@ -4,7 +4,7 @@ This action enables you to interact with [DigitalOcean](https://www.digitalocean
 
 ## Usage
 
-To install the latest version of `doctl` and use it in GitHub Actions workflows, add the following step:
+To install the latest version of `doctl` and use it in GitHub Actions workflows, [create a DigitalOcean API token](https://docs.digitalocean.com/reference/api/create-personal-access-token/), [add it as a secrect to your repository](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository), and add the following step to your workflow:
 
 ```yaml
     - name: Install doctl
