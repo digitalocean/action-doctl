@@ -5361,7 +5361,7 @@ const tc = __webpack_require__(533);
 const { Octokit } = __webpack_require__(889);
 
 const baseDownloadURL = "https://github.com/digitalocean/doctl/releases/download"
-const fallbackVersion = "1.42.0"
+const fallbackVersion = "1.73.1"
 const octokit = new Octokit();
 
 async function downloadDoctl(version) {
@@ -5378,7 +5378,7 @@ async function downloadDoctl(version) {
 }
 
 async function run() {
-  try { 
+  try {
     var version = core.getInput('version');
     if ((!version) || (version.toLowerCase() === 'latest')) {
         version = await octokit.repos.getLatestRelease({
