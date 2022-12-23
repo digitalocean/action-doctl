@@ -52,6 +52,7 @@ Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
     core.info(`>>> doctl version v${version} installed to ${path}`);
 
     var token = core.getInput('token', { required: true });
+    core.setSecret(token);
     await exec.exec('doctl auth init -t', [token]);
     core.info('>>> Successfully logged into doctl');
   }
