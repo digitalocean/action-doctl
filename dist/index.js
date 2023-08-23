@@ -17455,25 +17455,57 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
+const os = __nccwpck_require__(2037);
 const core = __nccwpck_require__(2186);
 const exec = __nccwpck_require__(1514);
 const tc = __nccwpck_require__(7784);
 const { Octokit } = __nccwpck_require__(5375);
 
-const baseDownloadURL = "https://github.com/digitalocean/doctl/releases/download"
-const fallbackVersion = "1.84.0"
+const baseDownloadURL = "https://github.com/digitalocean/doctl/releases/download";
+const fallbackVersion = "1.98.1";
 const octokit = new Octokit();
 
-async function downloadDoctl(version) {
-    if (process.platform === 'win32') {
-        const doctlDownload = await tc.downloadTool(`${baseDownloadURL}/v${version}/doctl-${version}-windows-amd64.zip`);
-        return tc.extractZip(doctlDownload);
+async function downloadDoctl(version, osType, osMachine) {
+    var platform = 'linux';
+    var arch = 'amd64';
+    var extension = 'tar.gz';
+
+    switch (osType) {
+        case 'Darwin': 
+            platform = 'darwin';
+            break;
+        case 'Windows_NT':
+            platform = 'windows';
+            extension = 'zip'
+            break;
+        case 'Linux':
+            platform = 'linux';
+            break;
+        default:
+            core.warning(`unknown platform: ${osType}; defaulting to ${platform}`);
+            break;
     }
-    if (process.platform === 'darwin') {
-        const doctlDownload = await tc.downloadTool(`${baseDownloadURL}/v${version}/doctl-${version}-darwin-amd64.tar.gz`);
-        return tc.extractTar(doctlDownload);
+
+    switch (osMachine) {
+        case 'arm64': 
+            arch = 'arm64';
+            break;
+        case 'x86_64':
+            arch = 'amd64';
+            break;
+        case 'i386':
+        case 'i686':
+            arch = '386';
+            break;
+        default:
+            core.warning(`unknown architecture: ${osMachine}; defaulting to ${arch}`);
+            break;
     }
-    const doctlDownload = await tc.downloadTool(`${baseDownloadURL}/v${version}/doctl-${version}-linux-amd64.tar.gz`);
+
+    const downloadURL = `${baseDownloadURL}/v${version}/doctl-${version}-${platform}-${arch}.${extension}`;
+    core.debug(`doctl download url: ${downloadURL}`);
+    const doctlDownload = await tc.downloadTool(downloadURL);
+
     return tc.extractTar(doctlDownload);
 }
 
@@ -17502,7 +17534,7 @@ Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
 
     var path = tc.find("doctl", version);
     if (!path) {
-        const installPath = await downloadDoctl(version);
+        const installPath = await downloadDoctl(version, os.type(), os.machine());
         path = await tc.cacheDir(installPath, 'doctl', version);
     }
     core.addPath(path);
