@@ -1,4 +1,3 @@
-const os = require('os');
 const core = require('@actions/core');
 const exec = require('@actions/exec');
 const tc = require('@actions/tool-cache');
@@ -8,40 +7,39 @@ const baseDownloadURL = "https://github.com/digitalocean/doctl/releases/download
 const fallbackVersion = "1.98.1";
 const octokit = new Octokit();
 
-async function downloadDoctl(version, osType, osMachine) {
+async function downloadDoctl(version, type, architecture) {
     var platform = 'linux';
     var arch = 'amd64';
     var extension = 'tar.gz';
 
-    switch (osType) {
-        case 'Darwin': 
+    switch (type) {
+        case 'darwin':
             platform = 'darwin';
             break;
-        case 'Windows_NT':
+        case 'win32':
             platform = 'windows';
             extension = 'zip'
             break;
-        case 'Linux':
+        case 'linux':
             platform = 'linux';
             break;
         default:
-            core.warning(`unknown platform: ${osType}; defaulting to ${platform}`);
+            core.warning(`unknown platform: ${type}; defaulting to ${platform}`);
             break;
     }
 
-    switch (osMachine) {
+    switch (architecture) {
         case 'arm64': 
             arch = 'arm64';
             break;
-        case 'x86_64':
+        case 'x64':
             arch = 'amd64';
             break;
-        case 'i386':
-        case 'i686':
+        case 'ia32':
             arch = '386';
             break;
         default:
-            core.warning(`unknown architecture: ${osMachine}; defaulting to ${arch}`);
+            core.warning(`unknown architecture: ${architecture}; defaulting to ${arch}`);
             break;
     }
 
@@ -77,7 +75,7 @@ Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
 
     var path = tc.find("doctl", version);
     if (!path) {
-        const installPath = await downloadDoctl(version, os.type(), os.machine());
+        const installPath = await downloadDoctl(version, process.platform, process.arch);
         path = await tc.cacheDir(installPath, 'doctl', version);
     }
     core.addPath(path);
