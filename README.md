@@ -26,6 +26,8 @@ See [this repository](https://github.com/do-community/example-doctl-action) for 
 
 - `token` – (**Required**) A DigitalOcean personal access token ([more info](https://docs.digitalocean.com/reference/api/create-personal-access-token/)).
 - `version` – (Optional) The version of `doctl` to install. If excluded, the latest release will be used.
+- `no_auth` – (Optional) Set to `true` to skip the authentication step. The API `token` parameter is _Optional_ in this case.
+  - _Note:_ This can be useful when running in workflows in untrusted environments, or where auth isn't necessary (e.g. `doctl app spec validate`)
 
 ## Contributing
 

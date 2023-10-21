@@ -8,9 +8,12 @@ inputs:
   version:
     description: 'Version of doctl to install'
     default: 'latest'
+  no_auth:
+    description: 'Skip authentication'
+    default: 'false'
   token:
     description: 'DigitalOcean API Token'
-    required: true
+    default: ''
 runs:
   using: 'node16'
   main: 'dist/index.js'
