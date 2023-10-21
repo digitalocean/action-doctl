@@ -17538,6 +17538,14 @@ Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
     core.addPath(path);
     core.info(`>>> doctl version v${version} installed to ${path}`);
 
+    // Skip authentication if requested
+    // for workflows where auth isn't necessary (e.g. doctl app spec validate)
+    var no_auth = core.getInput('no_auth');
+    if (no_auth.toLowerCase() === 'true') {
+      core.info('>>> Skipping doctl auth');
+      return;
+    }
+
     var token = core.getInput('token', { required: true });
     core.setSecret(token);
     await exec.exec('doctl auth init -t', [token]);
