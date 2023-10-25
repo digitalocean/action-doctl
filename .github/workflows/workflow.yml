@@ -39,6 +39,26 @@ jobs:
       - name: Verify log-in
         run: doctl compute region list
 
+  test_no_auth:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Install doctl
+        uses: ./
+        with:
+          no_auth: true
+
+      - name: Verify installation
+        run: doctl version
+
+      - name: Verify not authenticated
+        run: |
+          doctl compute region list 2>&1 | grep -qi "Unable to initialize DigitalOcean API client: access token is required"
+
   test_custom_version_linux_and_mac:
     runs-on: ${{ matrix.os }}
     strategy:
