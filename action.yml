@@ -15,5 +15,5 @@ inputs:
     description: 'DigitalOcean API Token'
     default: ''
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
