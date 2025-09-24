@@ -17,7 +17,7 @@ async function getRecentReleases(count = 5) {
         return response.data.map(release => release.name);
     } catch (error) {
         core.warning(`Failed to fetch recent releases: ${error.message}`);
-        return [fallbackVersion];
+        return [`v${fallbackVersion}`];
     }
 }
 
@@ -57,15 +57,23 @@ async function downloadDoctl(version, type, architecture) {
             break;
     }
 
-    const downloadURL = `${baseDownloadURL}/v${version}/doctl-${version}-${platform}-${arch}.${extension}`;
+    // Ensure version handling: GitHub path needs 'v' prefix, filename needs version without 'v'
+    const githubVersion = version.startsWith('v') ? version : `v${version}`;
+    const fileVersion = version.startsWith('v') ? version.substr(1) : version;
+    
+    const downloadURL = `${baseDownloadURL}/${githubVersion}/doctl-${fileVersion}-${platform}-${arch}.${extension}`;
     core.debug(`doctl download url: ${downloadURL}`);
     
     try {
         const doctlDownload = await tc.downloadTool(downloadURL);
-        return tc.extractTar(doctlDownload);
+        if (extension === 'zip') {
+            return tc.extractZip(doctlDownload);
+        } else {
+            return tc.extractTar(doctlDownload);
+        }
     } catch (error) {
-        core.warning(`Failed to download doctl v${version}: ${error.message}`);
-        throw new Error(`Download failed for version ${version}: ${error.message}`);
+        core.warning(`Failed to download doctl v${fileVersion}: ${error.message}`);
+        throw new Error(`Download failed for version ${fileVersion}: ${error.message}`);
     }
 }
 
@@ -73,10 +81,10 @@ async function downloadDoctlWithFallback(requestedVersion, type, architecture) {
     // If a specific version was requested, try it first
     if (requestedVersion !== 'latest') {
         try {
-            core.info(`Attempting to download doctl v${requestedVersion}`);
+            core.info(`Attempting to download doctl ${requestedVersion}`);
             return await downloadDoctl(requestedVersion, type, architecture);
         } catch (error) {
-            core.warning(`Failed to download requested version v${requestedVersion}, will try recent versions`);
+            core.warning(`Failed to download requested version ${requestedVersion} with error ${error.message}, will try recent versions`);
         }
     }
 
@@ -85,12 +93,12 @@ async function downloadDoctlWithFallback(requestedVersion, type, architecture) {
     
     for (const version of recentReleases) {
         try {
-            core.info(`Attempting to download doctl v${version}`);
+            core.info(`Attempting to download doctl ${version}`);
             const installPath = await downloadDoctl(version, type, architecture);
-            core.info(`Successfully downloaded doctl v${version}`);
+            core.info(`Successfully downloaded doctl ${version}`);
             return { installPath, version };
         } catch (error) {
-            core.warning(`Failed to download doctl v${version}, trying next version`);
+            core.warning(`Failed to download doctl ${version}, trying next version with error ${error.message}`);
             continue;
         }
     }
@@ -116,15 +124,17 @@ async function run() {
             // Fallback to a known version if API access is rate limited.
             core.warning(`${error.message}
 
-Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
-            return fallbackVersion;
+Failed to retrieve latest version; falling back to: v${fallbackVersion}`);
+            return `v${fallbackVersion}`;
         });
         requestedVersion = 'latest';
     }
+    
+    // Strip 'v' prefix for filename in download URL
     if (version.charAt(0) === 'v') {
         version = version.substr(1);
     }
-
+    
     var path = tc.find("doctl", version);
     var actualVersion = version;
     
@@ -136,10 +146,11 @@ Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
             actualVersion = version;
         } catch (error) {
             // If the download fails (e.g., missing artifacts), try fallback versions
-            core.warning(`Failed to download doctl v${version}, trying fallback versions`);
+            core.warning(`Failed to download doctl ${version}, trying fallback versions with error ${error.message}`);
             const result = await downloadDoctlWithFallback(requestedVersion, process.platform, process.arch);
-            path = await tc.cacheDir(result.installPath, 'doctl', result.version);
-            actualVersion = result.version;
+            const resultVersion = result.version.startsWith('v') ? result.version.substr(1) : result.version;
+            path = await tc.cacheDir(result.installPath, 'doctl', resultVersion);
+            actualVersion = resultVersion;
         }
     }
     
