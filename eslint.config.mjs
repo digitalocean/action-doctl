@@ -22,7 +22,7 @@ export default [...compat.extends("eslint:recommended"), {
             SharedArrayBuffer: "readonly",
         },
 
-        ecmaVersion: 2018,
+        ecmaVersion: 2019,
         sourceType: "commonjs",
     },
 

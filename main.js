@@ -75,7 +75,7 @@ async function downloadDoctlWithFallback(requestedVersion, type, architecture) {
         try {
             core.info(`Attempting to download doctl v${requestedVersion}`);
             return await downloadDoctl(requestedVersion, type, architecture);
-        } catch (error) { // eslint-disable-line no-unused-vars
+        } catch {
             core.warning(`Failed to download requested version v${requestedVersion}, will try recent versions`);
         }
     }
@@ -89,7 +89,7 @@ async function downloadDoctlWithFallback(requestedVersion, type, architecture) {
             const installPath = await downloadDoctl(version, type, architecture);
             core.info(`Successfully downloaded doctl v${version}`);
             return { installPath, version };
-        } catch (error) { // eslint-disable-line no-unused-vars
+        } catch {
             core.warning(`Failed to download doctl v${version}, trying next version`);
             continue;
         }
@@ -134,7 +134,7 @@ Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
             const installPath = await downloadDoctl(version, process.platform, process.arch);
             path = await tc.cacheDir(installPath, 'doctl', version);
             actualVersion = version;
-        } catch (error) { // eslint-disable-line no-unused-vars
+        } catch {
             // If the download fails (e.g., missing artifacts), try fallback versions
             core.warning(`Failed to download doctl v${version}, trying fallback versions`);
             const result = await downloadDoctlWithFallback(requestedVersion, process.platform, process.arch);
