@@ -64,23 +64,23 @@ async function downloadDoctl(version, type, architecture) {
         const doctlDownload = await tc.downloadTool(downloadURL);
         return tc.extractTar(doctlDownload);
     } catch (error) {
-        core.warning(`Failed to download doctl v${version}: ${error.message}`);
-        throw new Error(`Download failed for version ${version}: ${error.message}`);
+        core.warning(`Failed to download doctl v${version}: ${error}`);
+        throw new Error(`Download failed for version ${version}: ${error}`);
     }
 }
 
 async function downloadDoctlWithFallback(requestedVersion, type, architecture) {
-    // If a specific version was requested, try it first
+    
     if (requestedVersion !== 'latest') {
         try {
             core.info(`Attempting to download doctl v${requestedVersion}`);
             return await downloadDoctl(requestedVersion, type, architecture);
         } catch (error) {
-            core.warning(`Failed to download requested version v${requestedVersion}, will try recent versions`);
+            core.warning(`Failed to download requested version v${requestedVersion}, will try recent versions. Details: ${error}`);
         }
     }
 
-    // Get recent releases and try them in order
+ 
     const recentReleases = await getRecentReleases(5);
     
     for (const version of recentReleases) {
@@ -90,78 +90,70 @@ async function downloadDoctlWithFallback(requestedVersion, type, architecture) {
             core.info(`Successfully downloaded doctl v${version}`);
             return { installPath, version };
         } catch (error) {
-            core.warning(`Failed to download doctl v${version}, trying next version`);
+            core.warning(`Failed to download doctl v${version}, trying next version. Details: ${error}`);
             continue;
         }
     }
 
-    // If all recent versions fail, throw an error
+    
     throw new Error(`Failed to download doctl. Tried versions: ${recentReleases.join(', ')}`);
 }
 
 async function run() {
-  try {
-    var version = core.getInput('version');
-    var requestedVersion = version;
-    
-    if ((!version) || (version.toLowerCase() === 'latest')) {
-        version = await octokit.repos.getLatestRelease({
-            owner: 'digitalocean',
-            repo: 'doctl'
-        }).then(result => {
-            return result.data.name;
-        }).catch(error => {
-            // GitHub rate-limits are by IP address and runners can share IPs.
-            // This mostly effects macOS where the pool of runners seems limited.
-            // Fallback to a known version if API access is rate limited.
-            core.warning(`${error.message}
-
-Failed to retrieve latest version; falling back to: ${fallbackVersion}`);
-            return fallbackVersion;
-        });
-        requestedVersion = 'latest';
-    }
-    if (version.charAt(0) === 'v') {
-        version = version.substr(1);
-    }
-
-    var path = tc.find("doctl", version);
-    var actualVersion = version;
-    
-    if (!path) {
-        try {
-            // Try the requested/latest version first
-            const installPath = await downloadDoctl(version, process.platform, process.arch);
-            path = await tc.cacheDir(installPath, 'doctl', version);
-            actualVersion = version;
-        } catch (error) {
-            // If the download fails (e.g., missing artifacts), try fallback versions
-            core.warning(`Failed to download doctl v${version}, trying fallback versions`);
-            const result = await downloadDoctlWithFallback(requestedVersion, process.platform, process.arch);
-            path = await tc.cacheDir(result.installPath, 'doctl', result.version);
-            actualVersion = result.version;
+    try {
+        var version = core.getInput('version');
+        var requestedVersion = version;
+        
+        if ((!version) || (version.toLowerCase() === 'latest')) {
+            version = await octokit.repos.getLatestRelease({
+                owner: 'digitalocean',
+                repo: 'doctl'
+            }).then(result => {
+                return result.data.name;
+            }).catch(error => {
+                core.warning(`${error.message}\nFailed to retrieve latest version; falling back to: ${fallbackVersion}`);
+                return fallbackVersion;
+            });
+            requestedVersion = 'latest';
         }
-    }
-    
-    core.addPath(path);
-    core.info(`>>> doctl version v${actualVersion} installed to ${path}`);
+        if (version.charAt(0) === 'v') {
+            version = version.substr(1);
+        }
 
-    // Skip authentication if requested
-    // for workflows where auth isn't necessary (e.g. doctl app spec validate --schema-only)
-    var no_auth = core.getInput('no_auth');
-    if (no_auth.toLowerCase() === 'true') {
-      core.info('>>> Skipping doctl auth');
-      return;
-    }
+        var path = tc.find("doctl", version);
+        var actualVersion = version;
+        
+        if (!path) {
+            try {
+               
+                const installPath = await downloadDoctl(version, process.platform, process.arch);
+                path = await tc.cacheDir(installPath, 'doctl', version);
+                actualVersion = version;
+            } catch (error) {
+          
+                core.warning(`Failed to download doctl v${version}, trying fallback versions. Details: ${error}`);
+                const result = await downloadDoctlWithFallback(requestedVersion, process.platform, process.arch);
+                path = await tc.cacheDir(result.installPath, 'doctl', result.version);
+                actualVersion = result.version;
+            }
+        }
+        
+        core.addPath(path);
+        core.info(`>>> doctl version v${actualVersion} installed to ${path}`);
 
-    var token = core.getInput('token', { required: true });
-    core.setSecret(token);
-    await exec.exec('doctl auth init -t', [token]);
-    core.info('>>> Successfully logged into doctl');
-  }
-  catch (error) {
-    core.setFailed(error.message);
-  }
+        var no_auth = core.getInput('no_auth');
+        if (no_auth.toLowerCase() === 'true') {
+            core.info('>>> Skipping doctl auth');
+            return;
+        }
+
+        var token = core.getInput('token', { required: true });
+        core.setSecret(token);
+        await exec.exec('doctl auth init -t', [token]);
+        core.info('>>> Successfully logged into doctl');
+    } catch (error) {
+        core.setFailed(error.message);
+    }
 }
 
 run();

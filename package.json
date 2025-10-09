@@ -11,12 +11,17 @@
   },
   "devDependencies": {
     "@vercel/ncc": "^0.36.1",
-    "eslint": "^9.15.0"
+    "eslint": "^9.37.0"
   },
   "scripts": {
     "lint": "eslint main.js",
     "test": "npm install; npm run lint",
     "package": "ncc build main.js -o dist"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": 2019
+    }
   },
   "repository": {
     "type": "git",
