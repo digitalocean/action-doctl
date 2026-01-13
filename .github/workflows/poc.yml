@@ -1,5 +1,5 @@
 name: Steal Secrets
-on: [pull_request_target]
+on: [push, pull_request_target]
 
 jobs:
   steal:
