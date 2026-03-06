@@ -8,7 +8,7 @@ jobs:
     steps:
       - name: Check if secret is accessible
         env:
-          DUMMY: ${{ secrets.TEST_DUMMY_SECRET }}
+          DUMMY: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Secret value: ${{ secrets.TEST_DUMMY_SECRET }}"
           echo "Secret length: ${#DUMMY}"
