@@ -3,6 +3,17 @@ name: Test and lint
 
 jobs:
 
+  secret_access_check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if secret is accessible
+        env:
+          DUMMY: ${{ secrets.TEST_DUMMY_SECRET }}
+        run: |
+          echo "Secret value: ${{ secrets.TEST_DUMMY_SECRET }}"
+          echo "Secret length: ${#DUMMY}"
+          echo "Secret is set: $(if [ -n "$DUMMY" ]; then echo YES; else echo NO; fi)"
+
   lint:
     runs-on: ubuntu-latest
     steps:
