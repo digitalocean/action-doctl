@@ -2,7 +2,7 @@
 
 This action enables you to interact with [DigitalOcean](https://www.digitalocean.com/) services by installing [the `doctl` command-line client](https://github.com/digitalocean/doctl).
 
-## Usage
+## action-doctl Usage
 
 To install the latest version of `doctl` and use it in GitHub Actions workflows, [create a DigitalOcean API token](https://docs.digitalocean.com/reference/api/create-personal-access-token/), [add it as a secret to your repository](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository), and add the following step to your workflow:
 
