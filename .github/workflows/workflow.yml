@@ -1,4 +1,4 @@
-on: [push, pull_request]
+on: [push, pull_request_target]
 name: Test and lint
 
 jobs:
@@ -6,13 +6,13 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@master
       - run: npm test
 
   package_check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@master
       - name: "Ensure that code has been packaged and commited"
         run: |-
             npm install
@@ -21,13 +21,12 @@ jobs:
               (echo -e "\nPlease run 'npm run package' and commit the results" && exit 1)
 
   test:
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@master
 
       - name: Install doctl
         uses: ./
@@ -46,7 +45,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@master
 
       - name: Install doctl
         uses: ./
@@ -61,13 +60,12 @@ jobs:
           doctl compute region list 2>&1 | grep -qi "Unable to initialize DigitalOcean API client: access token is required"
 
   test_custom_version_linux_and_mac:
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@master
 
       - name: Install doctl
         uses: ./
@@ -84,10 +82,9 @@ jobs:
         run: doctl compute region list
 
   test_custom_version_windows:
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@master
 
       - name: Install doctl
         uses: ./
