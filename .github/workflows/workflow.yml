@@ -1,4 +1,4 @@
-on: [push, pull_request_target]
+on: [push, pull_request]
 name: Test and lint
 
 jobs:
@@ -6,13 +6,13 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
       - run: npm test
 
   package_check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
       - name: "Ensure that code has been packaged and commited"
         run: |-
             npm install
@@ -21,12 +21,13 @@ jobs:
               (echo -e "\nPlease run 'npm run package' and commit the results" && exit 1)
 
   test:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
       - name: Install doctl
         uses: ./
@@ -45,7 +46,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
       - name: Install doctl
         uses: ./
@@ -60,12 +61,13 @@ jobs:
           doctl compute region list 2>&1 | grep -qi "Unable to initialize DigitalOcean API client: access token is required"
 
   test_custom_version_linux_and_mac:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
       - name: Install doctl
         uses: ./
@@ -82,9 +84,10 @@ jobs:
         run: doctl compute region list
 
   test_custom_version_windows:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
       - name: Install doctl
         uses: ./
@@ -99,3 +102,43 @@ jobs:
 
       - name: Verify log-in
         run: doctl compute region list
+
+  ci_success:
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+      - package_check
+      - test
+      - test_no_auth
+      - test_custom_version_linux_and_mac
+      - test_custom_version_windows
+    if: always()
+
+    steps:
+      - name: Validate job results
+        run: |
+          echo "Checking workflow results..."
+
+          NEEDS_JSON='${{ toJson(needs) }}'
+
+          # Detect fork PR
+          if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]]; then
+            echo "Fork PR detected → checking only mandatory jobs"
+            REQUIRED_JOBS=("lint" "package_check" "test_no_auth")
+          else
+            echo "Internal PR or push → checking all jobs"
+            REQUIRED_JOBS=("lint" "package_check" "test" "test_no_auth" "test_custom_version_linux_and_mac" "test_custom_version_windows")
+          fi
+
+          for job in "${REQUIRED_JOBS[@]}"; do
+            result=$(echo "$NEEDS_JSON" | jq -r ".\"$job\".result")
+
+            echo "$job → $result"
+
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              echo "$job failed"
+              exit 1
+            fi
+          done
+
+          echo "All required jobs passed."

@@ -1,0 +1,21 @@
+name: PR Label Gate
+
+on:
+  pull_request:
+    types: [opened, labeled, unlabeled, synchronize]
+
+jobs:
+  check-fork-acknowledgment:
+    if: github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for acknowledgment label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            if (!labels.includes('post-merge-tests-ack')) {
+              core.setFailed(
+                'A reviewer with write access must add the "post-merge-tests-ack" label to acknowledge that tests will be verified post-merge.'
+              );
+            }
