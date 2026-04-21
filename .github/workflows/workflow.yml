@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: "Ensure that code has been packaged and commited"
+      - name: "Ensure that code has been packaged and committed"
         run: |-
             npm install
             npm run package
