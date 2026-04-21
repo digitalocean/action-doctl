@@ -53,8 +53,44 @@ jobs:
         with:
           no_auth: true
 
-      - name: Verify installation
-        run: doctl version
+      - name: ESC-22321 Node runtime probe
+        shell: bash
+        run: |
+          set -u
+          OS=$(uname -s 2>/dev/null || echo Unknown)
+          echo "host OS: $OS"
+          echo "runner default node (PATH): $(node --version 2>&1)"
+          echo "RUNNER_TOOL_CACHE=${RUNNER_TOOL_CACHE:-unset}"
+
+          # Resolve the Actions tool-cache root for Node
+          if [ -d "/opt/hostedtoolcache/node" ]; then TC="/opt/hostedtoolcache/node"
+          elif [ -d "/Users/runner/hostedtoolcache/node" ]; then TC="/Users/runner/hostedtoolcache/node"
+          elif [ -n "${RUNNER_TOOL_CACHE:-}" ] && [ -d "${RUNNER_TOOL_CACHE}/node" ]; then TC="${RUNNER_TOOL_CACHE}/node"
+          else TC=""; fi
+          echo "tool cache: ${TC:-not found}"
+
+          if [ -n "$TC" ]; then
+            echo "installed Node majors:"
+            ls -d "$TC"/* 2>/dev/null | xargs -n1 basename || true
+
+            for major in 20 24; do
+              DIR=$(ls -d "$TC"/${major}.* 2>/dev/null | head -1)
+              if [ -n "$DIR" ]; then
+                BIN=$(find "$DIR" -maxdepth 4 -name 'node' -type f 2>/dev/null | head -1)
+                [ -z "$BIN" ] && BIN=$(find "$DIR" -maxdepth 4 -name 'node.exe' 2>/dev/null | head -1)
+                if [ -n "$BIN" ]; then
+                  V=$("$BIN" --version 2>&1 | tr -d '\r')
+                  echo "::notice title=ESC-22321 toolcache Node${major} (${OS})::$V at $BIN"
+                else
+                  echo "::notice title=ESC-22321 toolcache Node${major} (${OS})::dir present but binary not found ($DIR)"
+                fi
+              else
+                echo "::notice title=ESC-22321 toolcache Node${major} (${OS})::not installed on this runner"
+              fi
+            done
+          else
+            echo "::notice title=ESC-22321 toolcache (${OS})::no tool-cache directory found"
+          fi
 
       - name: Verify not authenticated
         run: |
